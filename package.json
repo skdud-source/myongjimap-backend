@@ -1,0 +1,31 @@
+{
+  "name": "teamproject1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "edges:generate": "node database/generate_edges.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skdud-source/teamproject1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/skdud-source/teamproject1/issues"
+  },
+  "homepage": "https://github.com/skdud-source/teamproject1#readme",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.3.0",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

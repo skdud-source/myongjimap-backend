@@ -1,0 +1,18 @@
+# Render 배포 설정 (Blueprint). Render 대시보드에서 이 저장소를 연결하면 이 파일대로 서비스가 만들어진다.
+services:
+  - type: web
+    name: myongjimap-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # 프론트엔드 배포 주소 (예: https://myongjimap.netlify.app). 끝에 / 를 붙이지 않는다. 쉼표로 여러 개 가능.
+      - key: CORS_ORIGIN
+        sync: false
+      # 노드 등록/삭제(좌표 등록 도구)를 쓰려면 직접 정한 비밀 문자열을 넣는다. 비워 두면 쓰기 API 는 막힌다.
+      - key: ADMIN_TOKEN
+        sync: false
