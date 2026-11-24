@@ -98,6 +98,85 @@ app.delete('/api/nodes/:id', (req, res) => {
 });
 
 
+// ----- 편의시설 (CONVENIENCE 편의점, CAFE 카페, PRINT 프린터, TOILET 화장실) -----
+// 쓰기(등록/삭제)는 노드와 같은 관리자 보호를 적용한다. 조회(GET)는 항상 허용.
+app.use('/api/facilities', (req, res, next) => {
+    if (req.method === 'GET' || req.method === 'OPTIONS') return next();
+    if (process.env.NODE_ENV !== 'production' && !ADMIN_TOKEN) return next();
+    if (ADMIN_TOKEN && req.get('x-admin-token') === ADMIN_TOKEN) return next();
+    return res.status(403).json({ error: '시설 등록/삭제는 관리자만 할 수 있습니다.' });
+});
+
+/* 등록된 시설 조회 */
+app.get('/api/facilities', (req, res) => {
+    try {
+        const facilities = db.prepare('SELECT * FROM facilities').all();
+        res.json(facilities);
+    } catch (error) {
+        console.error('시설 조회 오류:', error.message);
+        res.status(500).json({ error: '시설 조회에 실패했습니다.' });
+    }
+});
+
+/* 시설 좌표 등록 */
+app.post('/api/facilities', (req, res) => {
+    try {
+        const { building_id, floor_id, facility_type, facility_name, facility_code, x, y } = req.body;
+
+        if (!building_id || !floor_id || !facility_type || !facility_name || !facility_code ||
+            x === undefined || y === undefined) {
+            return res.status(400).json({
+                error: '건물, 층, 시설 유형, 시설명, 시설 코드, 좌표가 필요합니다.'
+            });
+        }
+
+        const allowedTypes = ['CAFE', 'CONVENIENCE', 'PRINT', 'TOILET'];
+        if (!allowedTypes.includes(facility_type)) {
+            return res.status(400).json({ error: '올바르지 않은 시설 유형입니다.' });
+        }
+
+        if (!Number.isFinite(Number(x)) || !Number.isFinite(Number(y))) {
+            return res.status(400).json({ error: '올바른 좌표를 입력해 주세요.' });
+        }
+
+        const result = db.prepare(`
+            INSERT INTO facilities (building_id, floor_id, facility_type, facility_name, facility_code, x, y)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(building_id, floor_id, facility_type, facility_name, facility_code, Number(x), Number(y));
+
+        res.status(201).json({
+            message: '시설 좌표가 저장되었습니다.',
+            facility_id: Number(result.lastInsertRowid)
+        });
+    } catch (error) {
+        console.error('시설 저장 오류:', error.message);
+        res.status(500).json({
+            error: '시설 저장에 실패했습니다. 건물, 층, 시설 코드도 확인해 주세요.'
+        });
+    }
+});
+
+/* 시설 삭제 */
+app.delete('/api/facilities/:id', (req, res) => {
+    try {
+        const facilityId = Number(req.params.id);
+        if (!Number.isInteger(facilityId) || facilityId <= 0) {
+            return res.status(400).json({ error: '올바르지 않은 시설 ID입니다.' });
+        }
+
+        const result = db.prepare('DELETE FROM facilities WHERE facility_id = ?').run(facilityId);
+        if (result.changes === 0) {
+            return res.status(404).json({ error: '삭제할 시설을 찾을 수 없습니다.' });
+        }
+
+        res.json({ message: '시설이 삭제되었습니다.' });
+    } catch (error) {
+        console.error('시설 삭제 오류:', error.message);
+        res.status(500).json({ error: '시설 삭제에 실패했습니다.' });
+    }
+});
+
+
 // 서버 실행
 app.listen(PORT, () => {
     console.log(`서버 실행 주소: http://localhost:${PORT}`);
