@@ -67,7 +67,7 @@ CREATE INDEX IF NOT EXISTS idx_classrooms_room
     ON classrooms(room_number);
 
 CREATE INDEX IF NOT EXISTS idx_edges_start
-    ON edges(start_node_id)
+    ON edges(start_node_id);
 
 
 -- 6. 편의시설 정보
